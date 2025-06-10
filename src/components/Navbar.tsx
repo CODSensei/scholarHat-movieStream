@@ -14,7 +14,7 @@ const MENU_CLASS = `
   px-1.5
   hover:bg-[#423F71]
   rounded-md
-  max:px-6
+  max-[768px]:px-6
 `;
 
 const MENU_CLASS_ACTIVE = `
