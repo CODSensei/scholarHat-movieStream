@@ -1,6 +1,13 @@
 import type { ReactNode } from "react";
 import type { MediaType } from "./types";
 
+export interface Movie {
+  id: number;
+  title: string;
+  poster: string;
+  overview: string;
+  releaseDate: string;
+}
 export interface CustomComponentProps {
   children?: ReactNode;
   classname?: string;
