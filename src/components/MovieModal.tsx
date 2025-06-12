@@ -1,11 +1,11 @@
 import type React from "react";
-import type { Movie } from "../utils/interfaces";
+import type { MovieTypes } from "../utils/interfaces";
 
 // MovieModal Component
-const MovieModal: React.FC<{ movie: Movie | null; onClose: () => void }> = ({
-  movie,
-  onClose,
-}) => {
+const MovieModal: React.FC<{
+  movie: MovieTypes | null;
+  onClose: () => void;
+}> = ({ movie, onClose }) => {
   if (!movie) return null;
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4">
@@ -14,7 +14,7 @@ const MovieModal: React.FC<{ movie: Movie | null; onClose: () => void }> = ({
           className="absolute top-2 right-2 text-white text-xl"
           onClick={onClose}
         >
-          &times;
+          ×
         </button>
         <img
           src={movie.poster}
@@ -23,6 +23,7 @@ const MovieModal: React.FC<{ movie: Movie | null; onClose: () => void }> = ({
         />
         <h2 className="text-white text-2xl font-bold mb-2">{movie.title}</h2>
         <p className="text-gray-300 mb-2">Release Date: {movie.releaseDate}</p>
+        <p className="text-gray-300 mb-2">Genre: {movie.genre}</p>
         <p className="text-gray-300">{movie.overview}</p>
       </div>
     </div>
