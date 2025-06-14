@@ -2,7 +2,6 @@
 import type React from "react";
 import type { MovieTypes } from "../utils/interfaces";
 
-// MovieModal Component
 const MovieModal: React.FC<{
   movie: MovieTypes | null;
   onClose: () => void;
@@ -12,7 +11,7 @@ const MovieModal: React.FC<{
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4">
       <div className="bg-gray-800 rounded-lg max-w-lg w-full p-6 relative">
         <button
-          className="absolute top-2 right-2 text-white text-xl"
+          className="absolute top-1 right-2 text-white text-xl"
           onClick={onClose}
         >
           ×

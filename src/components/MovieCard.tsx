@@ -2,7 +2,6 @@
 import type React from "react";
 import type { MovieTypes } from "../utils/interfaces";
 
-// MovieCard Component
 const MovieCard: React.FC<{
   movie: MovieTypes;
   onClick: (movie: MovieTypes) => void;

@@ -8,14 +8,58 @@ axios.defaults.headers.common.Authorization = `Bearer ${
   import.meta.env.VITE_API_KEY
 }`;
 
-// console.log(import.meta.env.VITE_API_KEY);
-
-// Want to use async/await? Add the `async` keyword to your outer function/method.
+// Get popular movies
 export const getMovies = async () => {
   try {
-    const response = await axios.get("/discover/movie");
+    const response = await axios.get("/movie/popular");
     return response;
   } catch (error) {
-    return error;
+    console.error("Error fetching movies:", error);
+    return { data: { results: [] } };
+  }
+};
+
+export const getGenres = async () => {
+  try {
+    const response = await axios.get("/genre/movie/list");
+    return response;
+  } catch (error) {
+    console.error("Error fetching genres:", error);
+    return { data: { genres: [] } };
+  }
+};
+
+// Search movies
+export const searchMovies = async (query: string) => {
+  try {
+    const response = await axios.get(
+      `/search/movie?query=${encodeURIComponent(query)}`
+    );
+    return response;
+  } catch (error) {
+    console.error("Error searching movies:", error);
+    return { data: { results: [] } };
+  }
+};
+
+// Get movies by genre
+export const getMoviesByGenre = async (genreId: number) => {
+  try {
+    const response = await axios.get(`/discover/movie?with_genres=${genreId}`);
+    return response;
+  } catch (error) {
+    console.error("Error fetching movies by genre:", error);
+    return { data: { results: [] } };
+  }
+};
+
+// Get movie details
+export const getMovieDetails = async (movieId: number) => {
+  try {
+    const response = await axios.get(`/movie/${movieId}`);
+    return response;
+  } catch (error) {
+    console.error("Error fetching movie details:", error);
+    return null;
   }
 };
