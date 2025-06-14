@@ -1,3 +1,4 @@
+//src/components/MovieCard.tsx
 import type React from "react";
 import type { MovieTypes } from "../utils/interfaces";
 

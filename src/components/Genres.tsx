@@ -1,6 +1,6 @@
-// Genres Component
+// src/components/Genres.tsx
 
-import React from "react";
+import React, { useState } from "react";
 import type { MovieTypes } from "../utils/interfaces";
 import MovieCard from "./MovieCard";
 
@@ -17,7 +17,7 @@ const Genres: React.FC<{
   onToggleFavorite,
   mockMovies,
 }) => {
-  const [selectedGenre, setSelectedGenre] = React.useState<string>("All");
+  const [selectedGenre, setSelectedGenre] = useState<string>("All");
 
   const genres = [
     "All",
@@ -26,9 +26,7 @@ const Genres: React.FC<{
 
   const filteredMovies = mockMovies.filter((movie: MovieTypes) => {
     const matchesSearch = movie.title
-
       .toLowerCase()
-
       .includes(searchQuery.toLowerCase());
 
     const matchesGenre =
@@ -43,7 +41,7 @@ const Genres: React.FC<{
 
       <select
         onChange={(e) => setSelectedGenre(e.target.value)}
-        className="mb-4 p-2 rounded-lg bg-gray-700 text-white border-none focus:outline-none focus:ring-2 focus:ring-blue-500"
+        className="mb-6 p-2 rounded-lg bg-gray-700 text-white border-none focus:outline-none focus:ring-2 focus:ring-blue-500"
       >
         {genres.map((genre: string) => (
           <option key={genre} value={genre}>

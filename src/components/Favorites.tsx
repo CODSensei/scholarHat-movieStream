@@ -1,3 +1,4 @@
+//src/components/Favorites.tsx
 import type { MovieTypes } from "../utils/interfaces";
 import MovieCard from "./MovieCard";
 

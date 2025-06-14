@@ -1,3 +1,4 @@
+//src/utils/interfaces.ts
 export interface MovieTypes {
   id: number;
   title: string;
