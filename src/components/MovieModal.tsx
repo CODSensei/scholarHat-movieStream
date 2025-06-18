@@ -1,30 +1,34 @@
 //src/components/MovieModal.tsx
-import type React from "react";
-import type { MovieTypes } from "../utils/interfaces";
+import React from "react";
+import { useMovieStore } from "../store/movieStore";
 
-const MovieModal: React.FC<{
-  movie: MovieTypes | null;
-  onClose: () => void;
-}> = ({ movie, onClose }) => {
-  if (!movie) return null;
+const MovieModal: React.FC = () => {
+  const { selectedMovie, setSelectedMovie } = useMovieStore();
+
+  if (!selectedMovie) return null;
+
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4">
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-6 z-50">
       <div className="bg-gray-800 rounded-lg max-w-lg w-full p-6 relative">
         <button
-          className="absolute top-1 right-2 text-white text-xl"
-          onClick={onClose}
+          className="absolute top-0 right-1 text-white text-3xl hover:cursor-pointer"
+          onClick={() => setSelectedMovie(null)}
         >
           ×
         </button>
         <img
-          src={movie.poster}
-          alt={movie.title}
+          src={selectedMovie.poster}
+          alt={selectedMovie.title}
           className="w-full h-64 object-cover rounded-lg mb-4"
         />
-        <h2 className="text-white text-2xl font-bold mb-2">{movie.title}</h2>
-        <p className="text-gray-300 mb-2">Release Date: {movie.releaseDate}</p>
-        <p className="text-gray-300 mb-2">Genre: {movie.genre}</p>
-        <p className="text-gray-300">{movie.overview}</p>
+        <h2 className="text-white text-2xl font-bold mb-2">
+          {selectedMovie.title}
+        </h2>
+        <p className="text-gray-300 mb-2">
+          Release Date: {selectedMovie.releaseDate}
+        </p>
+        <p className="text-gray-300 mb-2">Genre: {selectedMovie.genre}</p>
+        <p className="text-gray-300">{selectedMovie.overview}</p>
       </div>
     </div>
   );

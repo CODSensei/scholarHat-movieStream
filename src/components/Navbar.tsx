@@ -1,23 +1,27 @@
 //src/components/Navbar.tsx
-import React, { useState } from "react";
+import React, { useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
+import { useMovieStore } from "../store/movieStore";
 
-const Navbar: React.FC<{ onSearch: (query: string) => void }> = ({
-  onSearch,
-}) => {
-  const [searchQuery, setSearchQuery] = useState<string>("");
+const Navbar: React.FC = () => {
+  const { searchQuery, setSearchQuery, searchMoviesAsync } = useMovieStore();
   const location = useLocation();
-  // console.log("Location :", location);
+
+  // Debounced search effect
+  useEffect(() => {
+    const debounceTimer = setTimeout(() => {
+      searchMoviesAsync(searchQuery);
+    }, 500);
+
+    return () => clearTimeout(debounceTimer);
+  }, [searchQuery, searchMoviesAsync]);
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const query = e.target.value;
-    setSearchQuery(query);
-    onSearch(query);
+    setSearchQuery(e.target.value);
   };
 
   const handleClearSearch = () => {
     setSearchQuery("");
-    onSearch("");
   };
 
   const isActive = (path: string) => {
@@ -62,16 +66,6 @@ const Navbar: React.FC<{ onSearch: (query: string) => void }> = ({
                   }`}
                 >
                   Home
-                </Link>
-              </li>
-              <li>
-                <Link
-                  to="/genres"
-                  className={`hover:text-blue-400 transition-colors ${
-                    isActive("/genres") ? "text-blue-400 font-semibold" : ""
-                  }`}
-                >
-                  Genres
                 </Link>
               </li>
               <li>

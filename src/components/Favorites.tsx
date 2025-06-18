@@ -1,20 +1,20 @@
 //src/components/Favorites.tsx
-import type React from "react";
-import type { MovieTypes } from "../utils/interfaces";
+import React from "react";
+import { useMovieStore } from "../store/movieStore";
 import MovieCard from "./MovieCard";
 
-const Favorites: React.FC<{
-  searchQuery: string;
-  favorites: number[];
-  onMovieClick: (movie: MovieTypes) => void;
-  onToggleFavorite: (id: number) => void;
-  movies: MovieTypes[];
-}> = ({ searchQuery, favorites, onMovieClick, onToggleFavorite, movies }) => {
-  const favoriteMovies = movies.filter((movie) => favorites.includes(movie.id));
+const Favorites: React.FC = () => {
+  const {
+    searchQuery,
+    favorites,
+    setSelectedMovie,
+    toggleFavorite,
+    getFavoriteMovies,
+    getFilteredMovies,
+  } = useMovieStore();
 
-  const filteredMovies = favoriteMovies.filter((movie: MovieTypes) =>
-    movie.title.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const favoriteMovies = getFavoriteMovies();
+  const filteredMovies = getFilteredMovies(favoriteMovies);
 
   return (
     <main className="p-4">
@@ -29,12 +29,12 @@ const Favorites: React.FC<{
 
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
         {filteredMovies.length > 0 ? (
-          filteredMovies.map((movie: MovieTypes) => (
+          filteredMovies.map((movie) => (
             <MovieCard
               key={movie.id}
               movie={movie}
-              onClick={onMovieClick}
-              onToggleFavorite={onToggleFavorite}
+              onClick={setSelectedMovie}
+              onToggleFavorite={toggleFavorite}
               isFavorite={true}
             />
           ))
@@ -69,4 +69,5 @@ const Favorites: React.FC<{
     </main>
   );
 };
+
 export default Favorites;
