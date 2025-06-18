@@ -1,121 +1,129 @@
-//src/components/Home.tsx
 import React, { useEffect } from "react";
 import { useMovieStore } from "../store/movieStore";
 import MovieCard from "./MovieCard";
+import { Link } from "react-router-dom";
 
 const Home: React.FC = () => {
   const {
-    searchQuery,
-    favorites,
+    movies,
+    genres,
     selectedGenre,
     genreMovies,
     genreLoading,
-    genres,
-    movies,
-    setSelectedMovie,
-    toggleFavorite,
-    setSelectedGenre,
+    popularPage,
+    popularTotalPages,
+    fetchPopularMovies,
     fetchMoviesByGenre,
-    setGenreMovies,
+    setSelectedGenre,
     getFilteredMovies,
-    getMoviesWithGenres,
+    toggleFavorite,
   } = useMovieStore();
 
-  // Fetch movies when genre changes
   useEffect(() => {
-    const fetchGenreMovies = async () => {
-      if (selectedGenre === "All") {
-        const moviesWithGenres = getMoviesWithGenres();
-        setGenreMovies(moviesWithGenres);
-        return;
-      }
+    fetchPopularMovies();
+    genres.slice(0, 5).forEach((genre) => {
+      fetchMoviesByGenre(genre.id, genre.name);
+    });
+  }, [fetchPopularMovies, fetchMoviesByGenre, genres]);
 
-      const selectedGenreObj = genres.find((g) => g.name === selectedGenre);
-      if (selectedGenreObj) {
-        await fetchMoviesByGenre(selectedGenreObj.id);
-      }
-    };
+  const handleSeeMorePopular = () => {
+    if (popularPage < popularTotalPages) {
+      fetchPopularMovies(popularPage + 1);
+    }
+  };
 
-    fetchGenreMovies();
-  }, [
-    selectedGenre,
-    movies,
-    genres,
-    fetchMoviesByGenre,
-    setGenreMovies,
-    getMoviesWithGenres,
-  ]);
-
-  const filteredMovies = getFilteredMovies(genreMovies);
-  const genreOptions = ["All", ...genres.map((genre) => genre.name)];
+  const handleSeeMoreGenre = (genreName: string) => {
+    const genre = genres.find((g) => g.name === genreName);
+    if (genre) {
+      setSelectedGenre(genreName);
+      fetchMoviesByGenre(
+        genre.id,
+        genreName,
+        (genreMovies[genreName]?.length || 0) / 20 + 1
+      );
+    }
+  };
 
   return (
-    <main className="p-4">
-      <div
-        className={
-          selectedGenre === `All`
-            ? `flex flex-row items-center justify-between mb-4`
-            : `flex flex-row items-center justify-between`
-        }
-      >
-        <h2 className="text-white text-3xl font-extrabold ">Popular Movies</h2>
-        <select
-          value={selectedGenre}
-          onChange={(e) => setSelectedGenre(e.target.value)}
-          className="p-3 rounded-lg bg-gray-700 text-white border-none focus:outline-none focus:ring-2 focus:ring-blue-500 min-w-48"
-        >
-          {genreOptions.map((genre) => (
-            <option key={genre} value={genre}>
-              {genre}
-            </option>
-          ))}
-        </select>
-      </div>
-
-      {selectedGenre !== "All" && (
-        <p className="text-gray-300 mb-4 font-medium">
-          Showing {selectedGenre} movies
-        </p>
-      )}
-
-      {genreLoading ? (
-        <div className="text-center py-8">
-          <div className="text-white text-lg">
-            Loading {selectedGenre} movies...
-          </div>
+    <main className="bg-gray-900 text-white p-6">
+      <div className="max-w-11/12 mx-auto">
+        <div className="flex justify-between items-center mb-6">
+          <h1 className="text-4xl font-bold">MovieStream</h1>
+          <select
+            value={selectedGenre}
+            onChange={(e) => setSelectedGenre(e.target.value)}
+            className="p-3 rounded-lg bg-gray-700 text-white border-none focus:outline-none focus:ring-2 focus:ring-blue-500 min-w-48"
+          >
+            <option value="All">All Genres</option>
+            {genres.map((genre) => (
+              <option key={genre.id} value={genre.name}>
+                {genre.name}
+              </option>
+            ))}
+          </select>
         </div>
-      ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
-          {filteredMovies.length > 0 ? (
-            filteredMovies.map((movie) => (
+        {/* Popular Movies Section */}
+        <section className="mb-12">
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-2xl font-semibold">Popular Movies</h2>
+            {popularPage < popularTotalPages && (
+              <button
+                onClick={handleSeeMorePopular}
+                className="text-blue-400 hover:underline"
+              >
+                See More
+              </button>
+            )}
+          </div>
+          <div className="flex overflow-x-auto space-x-4 pb-4 scrollbar-thin scrollbar-thumb-gray-700">
+            {getFilteredMovies(movies).map((movie) => (
               <MovieCard
                 key={movie.id}
                 movie={movie}
-                onClick={setSelectedMovie}
+                onClick={(id) => useMovieStore.getState().fetchMovieDetails(id)}
                 onToggleFavorite={toggleFavorite}
-                isFavorite={favorites.includes(movie.id)}
+                isFavorite={useMovieStore
+                  .getState()
+                  .favorites.includes(movie.id)}
               />
-            ))
-          ) : (
-            <div className="col-span-full text-center py-8">
-              <p className="text-white text-lg">
-                {searchQuery
-                  ? `No ${
-                      selectedGenre !== "All" ? selectedGenre : ""
-                    } movies found for "${searchQuery}"`
-                  : `No ${
-                      selectedGenre !== "All" ? selectedGenre : ""
-                    } movies available`}
-              </p>
-              {searchQuery && (
-                <p className="text-gray-400 mt-2">
-                  Try searching for something else or select a different genre.
-                </p>
-              )}
+            ))}
+          </div>
+        </section>
+        {genres.slice(0, 5).map((genre) => (
+          <section key={genre.id} className="mb-12">
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-2xl font-semibold">{genre.name}</h2>
+              <Link
+                to={`/genre/${genre.name}`}
+                onClick={() => handleSeeMoreGenre(genre.name)}
+                className="text-blue-400 hover:underline"
+              >
+                See More
+              </Link>
             </div>
-          )}
-        </div>
-      )}
+            <div className="flex overflow-x-auto space-x-4 pb-4 scrollbar-thin scrollbar-thumb-gray-700">
+              {getFilteredMovies(genreMovies[genre.name] || []).map((movie) => (
+                <MovieCard
+                  key={movie.id}
+                  movie={movie}
+                  onClick={(id) =>
+                    useMovieStore.getState().fetchMovieDetails(id)
+                  }
+                  onToggleFavorite={toggleFavorite}
+                  isFavorite={useMovieStore
+                    .getState()
+                    .favorites.includes(movie.id)}
+                />
+              ))}
+            </div>
+          </section>
+        ))}
+        {genreLoading && (
+          <div className="text-center py-8">
+            <div className="text-white text-lg">Loading more movies...</div>
+          </div>
+        )}
+      </div>
     </main>
   );
 };
