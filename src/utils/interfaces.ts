@@ -1,4 +1,3 @@
-//src/utils/interfaces.ts
 export interface MovieTypes {
   id: number;
   title: string;
@@ -7,9 +6,6 @@ export interface MovieTypes {
   releaseDate: string;
   genre: string;
   genre_ids?: number[];
-  vote_average?: number;
-  vote_count?: number;
-  videos?: { key: string; site: string; type: string }[];
 }
 
 export interface Genre {

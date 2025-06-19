@@ -1,14 +1,12 @@
-// src/store/movieStore.ts
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
-import type { MovieTypes, Genre } from "../utils/interfaces";
 import {
   getMovies,
   getGenres,
   searchMovies,
   getMoviesByGenre,
-  getMovieDetails,
 } from "../api/api";
+import type { Genre, MovieTypes } from "../utils/interfaces";
 
 interface MovieState {
   movies: MovieTypes[];
@@ -19,14 +17,10 @@ interface MovieState {
   favorites: number[];
   loading: boolean;
   selectedGenre: string;
-  genreMovies: { [key: string]: MovieTypes[] };
-  genrePage: { [key: string]: number };
-  genreTotalPages: { [key: string]: number };
+  genreMovies: MovieTypes[];
   genreLoading: boolean;
-  popularPage: number;
-  popularTotalPages: number;
-  searchPage: number;
-  searchTotalPages: number;
+  page: number;
+  totalPages: number;
 
   setMovies: (movies: MovieTypes[]) => void;
   setGenres: (genres: Genre[]) => void;
@@ -35,28 +29,18 @@ interface MovieState {
   setSearchQuery: (query: string) => void;
   setLoading: (loading: boolean) => void;
   setSelectedGenre: (genre: string) => void;
-  setGenreMovies: (genre: string, movies: MovieTypes[]) => void;
-  setGenrePage: (genre: string, page: number) => void;
-  setGenreTotalPages: (genre: string, totalPages: number) => void;
+  setGenreMovies: (movies: MovieTypes[]) => void;
   setGenreLoading: (loading: boolean) => void;
-  setPopularPage: (page: number) => void;
-  setPopularTotalPages: (totalPages: number) => void;
-  setSearchPage: (page: number) => void;
-  setSearchTotalPages: (totalPages: number) => void;
+  setPage: (page: number) => void;
+  setTotalPages: (pages: number) => void;
 
   addToFavorites: (id: number) => void;
   removeFromFavorites: (id: number) => void;
   toggleFavorite: (id: number) => void;
 
   fetchInitialData: () => Promise<void>;
-  searchMoviesAsync: (query: string, page?: number) => Promise<void>;
-  fetchMoviesByGenre: (
-    genreId: number,
-    genreName: string,
-    page?: number
-  ) => Promise<void>;
-  fetchPopularMovies: (page?: number) => Promise<void>;
-  fetchMovieDetails: (movieId: number) => Promise<void>;
+  searchMoviesAsync: (query: string) => Promise<void>;
+  fetchMoviesByGenre: (genreId: number) => Promise<void>;
 
   getMoviesWithGenres: () => MovieTypes[];
   getSearchResultsWithGenres: () => MovieTypes[];
@@ -76,14 +60,10 @@ export const useMovieStore = create<MovieState>()(
       favorites: [],
       loading: false,
       selectedGenre: "All",
-      genreMovies: {},
-      genrePage: {},
-      genreTotalPages: {},
+      genreMovies: [],
       genreLoading: false,
-      popularPage: 1,
-      popularTotalPages: 1,
-      searchPage: 1,
-      searchTotalPages: 1,
+      page: 1,
+      totalPages: 1,
 
       setMovies: (movies) => set({ movies }),
       setGenres: (genres) => set({ genres }),
@@ -92,23 +72,10 @@ export const useMovieStore = create<MovieState>()(
       setSearchQuery: (query) => set({ searchQuery: query }),
       setLoading: (loading) => set({ loading }),
       setSelectedGenre: (genre) => set({ selectedGenre: genre }),
-      setGenreMovies: (genre, movies) =>
-        set((state) => ({
-          genreMovies: { ...state.genreMovies, [genre]: movies },
-        })),
-      setGenrePage: (genre, page) =>
-        set((state) => ({ genrePage: { ...state.genrePage, [genre]: page } })),
-      setGenreTotalPages: (genre, totalPages) =>
-        set((state) => ({
-          genreTotalPages: { ...state.genreTotalPages, [genre]: totalPages },
-        })),
+      setGenreMovies: (movies) => set({ genreMovies: movies }),
       setGenreLoading: (loading) => set({ genreLoading: loading }),
-      setPopularPage: (page) => set({ popularPage: page }),
-      setPopularTotalPages: (totalPages) =>
-        set({ popularTotalPages: totalPages }),
-      setSearchPage: (page) => set({ searchPage: page }),
-      setSearchTotalPages: (totalPages) =>
-        set({ searchTotalPages: totalPages }),
+      setPage: (page) => set({ page }),
+      setTotalPages: (totalPages) => set({ totalPages }),
 
       addToFavorites: (id) =>
         set((state) => ({
@@ -116,10 +83,12 @@ export const useMovieStore = create<MovieState>()(
             ? state.favorites
             : [...state.favorites, id],
         })),
+
       removeFromFavorites: (id) =>
         set((state) => ({
           favorites: state.favorites.filter((favId) => favId !== id),
         })),
+
       toggleFavorite: (id) =>
         set((state) => ({
           favorites: state.favorites.includes(id)
@@ -134,99 +103,92 @@ export const useMovieStore = create<MovieState>()(
             getMovies(),
             getGenres(),
           ]);
-          set({
-            movies: moviesResponse.data.results,
-            genres: genresResponse.data.genres,
-            popularTotalPages: moviesResponse.data.total_pages,
-          });
+          if (moviesResponse.data?.results) {
+            const formattedMovies = moviesResponse.data.results.map(
+              (movie: any) => ({
+                id: movie.id,
+                title: movie.title,
+                poster: movie.poster_path
+                  ? `https://image.tmdb.org/t/p/w500${movie.poster_path}`
+                  : "https://via.placeholder.com/500x750",
+                overview: movie.overview,
+                releaseDate: movie.release_date,
+                genre: movie.genre_ids?.[0] || "Unknown",
+                genre_ids: movie.genre_ids || [],
+              })
+            );
+            set({
+              movies: formattedMovies,
+              totalPages: moviesResponse.data.total_pages || 1,
+            });
+          }
+          if (genresResponse.data?.genres)
+            set({ genres: genresResponse.data.genres });
         } catch (error) {
-          console.error("Error fetching initial data:", error);
+          console.error("Error fetching data:", error);
         } finally {
           set({ loading: false });
         }
       },
 
-      fetchPopularMovies: async (page = 1) => {
-        try {
-          set({ genreLoading: true });
-          const response = await getMovies(page);
-          set({
-            movies:
-              page === 1
-                ? response.data.results
-                : [...get().movies, ...response.data.results],
-            popularPage: page,
-            popularTotalPages: response.data.total_pages,
-          });
-        } catch (error) {
-          console.error("Error fetching popular movies:", error);
-        } finally {
-          set({ genreLoading: false });
-        }
-      },
-
-      searchMoviesAsync: async (query: string, page = 1) => {
+      searchMoviesAsync: async (query: string) => {
         if (!query.trim()) {
-          set({ searchResults: [], searchPage: 1, searchTotalPages: 1 });
+          set({ searchResults: [] });
           return;
         }
         try {
-          const response = await searchMovies(query, page);
-          set({
-            searchResults:
-              page === 1
-                ? response.data.results
-                : [...get().searchResults, ...response.data.results],
-            searchPage: page,
-            searchTotalPages: response.data.total_pages,
-          });
-        } catch (error) {
-          console.error("Error searching movies:", error);
-          set({ searchResults: [], searchPage: 1, searchTotalPages: 1 });
-        }
-      },
-
-      fetchMoviesByGenre: async (
-        genreId: number,
-        genreName: string,
-        page = 1
-      ) => {
-        try {
-          set({ genreLoading: true });
-          const response = await getMoviesByGenre(genreId, page);
-          set({
-            genreMovies: {
-              ...get().genreMovies,
-              [genreName]:
-                page === 1
-                  ? response.data.results
-                  : [
-                      ...(get().genreMovies[genreName] || []),
-                      ...response.data.results,
-                    ],
-            },
-            genrePage: { ...get().genrePage, [genreName]: page },
-            genreTotalPages: {
-              ...get().genreTotalPages,
-              [genreName]: response.data.total_pages,
-            },
-          });
-        } catch (error) {
-          console.error("Error fetching genre movies:", error);
-          set({ genreMovies: { ...get().genreMovies, [genreName]: [] } });
-        } finally {
-          set({ genreLoading: false });
-        }
-      },
-
-      fetchMovieDetails: async (movieId: number) => {
-        try {
-          const response = await getMovieDetails(movieId);
-          if (response?.data) {
-            set({ selectedMovie: response.data });
+          const response = await searchMovies(query);
+          if (response.data?.results) {
+            const formattedResults = response.data.results.map(
+              (movie: any) => ({
+                id: movie.id,
+                title: movie.title,
+                poster: movie.poster_path
+                  ? `https://image.tmdb.org/t/p/w500${movie.poster_path}`
+                  : "https://via.placeholder.com/500x750",
+                overview: movie.overview,
+                releaseDate: movie.release_date,
+                genre: movie.genre_ids?.[0] || "Unknown",
+                genre_ids: movie.genre_ids || [],
+              })
+            );
+            set({
+              searchResults: formattedResults,
+              totalPages: response.data.total_pages || 1,
+            });
           }
         } catch (error) {
-          console.error("Error fetching movie details:", error);
+          console.error("Error searching movies:", error);
+          set({ searchResults: [] });
+        }
+      },
+
+      fetchMoviesByGenre: async (genreId: number) => {
+        try {
+          set({ genreLoading: true });
+          const response = await getMoviesByGenre(genreId);
+          if (response.data?.results) {
+            const formattedMovies = response.data.results.map((movie: any) => ({
+              id: movie.id,
+              title: movie.title,
+              poster: movie.poster_path
+                ? `https://image.tmdb.org/t/p/w500${movie.poster_path}`
+                : "https://via.placeholder.com/500x750",
+              overview: movie.overview,
+              releaseDate: movie.release_date,
+              genre: get().getGenreName(movie.genre_ids || []),
+              genre_ids: movie.genre_ids || [],
+            }));
+            set({
+              genreMovies: formattedMovies,
+              totalPages: response.data.total_pages || 1,
+            });
+          }
+        } catch (error) {
+          console.error("Error fetching genre movies:", error);
+          set({ genreMovies: [] });
+        } finally {
+          set({ genreLoading: false });
         }
       },
 
@@ -255,44 +217,25 @@ export const useMovieStore = create<MovieState>()(
 
       getFavoriteMovies: () => {
         const { getMoviesWithGenres, favorites } = get();
-        const moviesWithGenres = getMoviesWithGenres();
-        return moviesWithGenres.filter((movie) => favorites.includes(movie.id));
+        return getMoviesWithGenres().filter((movie) =>
+          favorites.includes(movie.id)
+        );
       },
 
       getFilteredMovies: (movies: MovieTypes[]) => {
-        const { searchQuery } = get();
-        return movies.filter((movie) =>
-          movie.title.toLowerCase().includes(searchQuery.toLowerCase())
-        );
+        const { searchQuery, page } = get();
+        const start = (page - 1) * 20;
+        const end = start + 20;
+        return movies
+          .filter((movie) =>
+            movie.title.toLowerCase().includes(searchQuery.toLowerCase())
+          )
+          .slice(start, end);
       },
     }),
     {
       name: "movie-store",
-      partialize: (state) => ({
-        favorites: state.favorites,
-        selectedGenre: state.selectedGenre,
-      }),
+      partialize: (state) => ({ favorites: state.favorites }),
     }
   )
 );
-
-export const useMovies = () => useMovieStore((state) => state.movies);
-export const useGenres = () => useMovieStore((state) => state.genres);
-export const useSearchQuery = () => useMovieStore((state) => state.searchQuery);
-export const useFavorites = () => useMovieStore((state) => state.favorites);
-export const useLoading = () => useMovieStore((state) => state.loading);
-export const useSelectedMovie = () =>
-  useMovieStore((state) => state.selectedMovie);
-export const useSearchResults = () =>
-  useMovieStore((state) => state.searchResults);
-export const useSelectedGenre = () =>
-  useMovieStore((state) => state.selectedGenre);
-export const useGenreMovies = () => useMovieStore((state) => state.genreMovies);
-export const useGenreLoading = () =>
-  useMovieStore((state) => state.genreLoading);
-export const usePopularPage = () => useMovieStore((state) => state.popularPage);
-export const usePopularTotalPages = () =>
-  useMovieStore((state) => state.popularTotalPages);
-export const useSearchPage = () => useMovieStore((state) => state.searchPage);
-export const useSearchTotalPages = () =>
-  useMovieStore((state) => state.searchTotalPages);

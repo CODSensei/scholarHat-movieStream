@@ -21,29 +21,30 @@ const Navbar: React.FC = () => {
     setSearchQuery("");
   };
 
-  const isActive = (path: string) => location.pathname === path;
-
   return (
-    <header className="bg-gray-900 text-white p-4 shadow-lg sticky top-0 z-50">
+    <header className="bg-gray-900 text-white p-4 shadow-lg fixed w-full z-50 transition-transform duration-300">
       <div className="max-w-7xl mx-auto flex justify-between items-center">
-        <Link to="/" className="hover:text-gray-300 transition-colors">
-          <h1 className="text-2xl font-bold text-blue-400">🎬 MovieStream</h1>
+        <Link
+          to="/"
+          className="text-2xl font-bold text-blue-400 hover:text-blue-300"
+        >
+          🎬 MovieStream
         </Link>
-        <div className="flex items-center gap-6">
+        <div className="flex items-center space-x-4">
           <div className="relative">
             <input
               type="text"
               value={searchQuery}
               onChange={handleSearchChange}
               placeholder="Search movies..."
-              className="p-2 pl-4 pr-10 rounded-lg bg-gray-700 text-white border-none focus:outline-none focus:ring-2 focus:ring-blue-500 w-64"
+              className="p-2 pl-4 pr-10 rounded-lg bg-gray-800 text-white border-none focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
             {searchQuery && (
               <button
                 onClick={handleClearSearch}
                 className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-white"
               >
-                ✕
+                ×
               </button>
             )}
           </div>
@@ -52,8 +53,10 @@ const Navbar: React.FC = () => {
               <li>
                 <Link
                   to="/"
-                  className={`hover:text-blue-400 transition-colors ${
-                    isActive("/") ? "text-blue-400 font-semibold" : ""
+                  className={`hover:text-blue-400 ${
+                    location.pathname === "/"
+                      ? "text-blue-400 font-semibold"
+                      : ""
                   }`}
                 >
                   Home
@@ -62,8 +65,10 @@ const Navbar: React.FC = () => {
               <li>
                 <Link
                   to="/favorites"
-                  className={`hover:text-blue-400 transition-colors ${
-                    isActive("/favorites") ? "text-blue-400 font-semibold" : ""
+                  className={`hover:text-blue-400 ${
+                    location.pathname === "/favorites"
+                      ? "text-blue-400 font-semibold"
+                      : ""
                   }`}
                 >
                   Favorites

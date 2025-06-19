@@ -1,11 +1,10 @@
 import React, { useEffect } from "react";
-import { Route, Routes } from "react-router-dom";
-import { useMovieStore } from "../store/movieStore";
+import { Routes, Route } from "react-router-dom";
 import Navbar from "./Navbar";
-import MovieModal from "./MovieModal";
 import Home from "./Home";
 import Favorites from "./Favorites";
-import ErrorBoundary from "./ErrorBoundary";
+import { useMovieStore } from "../store/movieStore";
+import GenrePage from "./GenrePage";
 
 const MovieStreaming: React.FC = () => {
   const { loading, fetchInitialData } = useMovieStore();
@@ -23,17 +22,14 @@ const MovieStreaming: React.FC = () => {
   }
 
   return (
-    <ErrorBoundary>
-      <div className="min-h-screen bg-gray-900">
-        <Navbar />
-        <Routes>
-          <Route path="/" element={<Home />} />
-          <Route path="/favorites" element={<Favorites />} />
-          {/* <Route path="/genre/:genreName" element={<Home />} /> */}
-        </Routes>
-        <MovieModal />
-      </div>
-    </ErrorBoundary>
+    <div className="min-h-screen bg-gray-900 text-white">
+      <Navbar />
+      <Routes>
+        <Route path="/" element={<Home />} />
+        <Route path="/favorites" element={<Favorites />} />
+        <Route path="/genre/:genreId" element={<GenrePage />} />
+      </Routes>
+    </div>
   );
 };
 

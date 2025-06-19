@@ -10,120 +10,71 @@ const Home: React.FC = () => {
     selectedGenre,
     genreMovies,
     genreLoading,
-    popularPage,
-    popularTotalPages,
-    fetchPopularMovies,
-    fetchMoviesByGenre,
     setSelectedGenre,
+    fetchMoviesByGenre,
+    getMoviesWithGenres,
     getFilteredMovies,
-    toggleFavorite,
   } = useMovieStore();
 
   useEffect(() => {
-    fetchPopularMovies();
-    genres.slice(0, 5).forEach((genre) => {
-      fetchMoviesByGenre(genre.id, genre.name);
-    });
-  }, [fetchPopularMovies, fetchMoviesByGenre, genres]);
-
-  const handleSeeMorePopular = () => {
-    if (popularPage < popularTotalPages) {
-      fetchPopularMovies(popularPage + 1);
+    if (selectedGenre && selectedGenre !== "All") {
+      const genre = genres.find((g) => g.name === selectedGenre);
+      if (genre) fetchMoviesByGenre(genre.id);
     }
-  };
+  }, [selectedGenre, genres, fetchMoviesByGenre]);
 
-  const handleSeeMoreGenre = (genreName: string) => {
-    const genre = genres.find((g) => g.name === genreName);
-    if (genre) {
-      setSelectedGenre(genreName);
-      fetchMoviesByGenre(
-        genre.id,
-        genreName,
-        (genreMovies[genreName]?.length || 0) / 20 + 1
-      );
-    }
-  };
+  const popularMovies = getMoviesWithGenres().slice(0, 10);
+  const filteredMovies = getFilteredMovies(
+    selectedGenre === "All" ? popularMovies : genreMovies
+  );
 
   return (
-    <main className="bg-gray-900 text-white p-6">
-      <div className="max-w-11/12 mx-auto">
-        <div className="flex justify-between items-center mb-6">
-          <h1 className="text-4xl font-bold">MovieStream</h1>
-          <select
-            value={selectedGenre}
-            onChange={(e) => setSelectedGenre(e.target.value)}
-            className="p-3 rounded-lg bg-gray-700 text-white border-none focus:outline-none focus:ring-2 focus:ring-blue-500 min-w-48"
-          >
-            <option value="All">All Genres</option>
-            {genres.map((genre) => (
-              <option key={genre.id} value={genre.name}>
-                {genre.name}
-              </option>
-            ))}
-          </select>
-        </div>
-        {/* Popular Movies Section */}
-        <section className="mb-12">
-          <div className="flex justify-between items-center mb-4">
-            <h2 className="text-2xl font-semibold">Popular Movies</h2>
-            {popularPage < popularTotalPages && (
-              <button
-                onClick={handleSeeMorePopular}
-                className="text-blue-400 hover:underline"
-              >
-                See More
-              </button>
-            )}
-          </div>
-          <div className="flex overflow-x-auto space-x-4 pb-4 scrollbar-thin scrollbar-thumb-gray-700">
-            {getFilteredMovies(movies).map((movie) => (
-              <MovieCard
-                key={movie.id}
-                movie={movie}
-                onClick={(id) => useMovieStore.getState().fetchMovieDetails(id)}
-                onToggleFavorite={toggleFavorite}
-                isFavorite={useMovieStore
-                  .getState()
-                  .favorites.includes(movie.id)}
-              />
-            ))}
-          </div>
-        </section>
-        {genres.slice(0, 5).map((genre) => (
-          <section key={genre.id} className="mb-12">
-            <div className="flex justify-between items-center mb-4">
-              <h2 className="text-2xl font-semibold">{genre.name}</h2>
-              <Link
-                to={`/genre/${genre.name}`}
-                onClick={() => handleSeeMoreGenre(genre.name)}
-                className="text-blue-400 hover:underline"
-              >
-                See More
-              </Link>
-            </div>
-            <div className="flex overflow-x-auto space-x-4 pb-4 scrollbar-thin scrollbar-thumb-gray-700">
-              {getFilteredMovies(genreMovies[genre.name] || []).map((movie) => (
-                <MovieCard
-                  key={movie.id}
-                  movie={movie}
-                  onClick={(id) =>
-                    useMovieStore.getState().fetchMovieDetails(id)
-                  }
-                  onToggleFavorite={toggleFavorite}
-                  isFavorite={useMovieStore
-                    .getState()
-                    .favorites.includes(movie.id)}
-                />
-              ))}
-            </div>
-          </section>
-        ))}
-        {genreLoading && (
-          <div className="text-center py-8">
-            <div className="text-white text-lg">Loading more movies...</div>
-          </div>
-        )}
+    <main className="p-6">
+      <div className="flex justify-end mb-4">
+        <select
+          value={selectedGenre}
+          onChange={(e) => setSelectedGenre(e.target.value)}
+          className="p-2 rounded-lg bg-gray-800 text-white border-none focus:outline-none focus:ring-2 focus:ring-blue-500"
+        >
+          {["All", ...genres.map((g) => g.name)].map((genre) => (
+            <option key={genre} value={genre}>
+              {genre}
+            </option>
+          ))}
+        </select>
       </div>
+      <h2 className="text-3xl font-bold mb-4">Popular Movies</h2>
+      <div className="flex overflow-x-auto space-x-4 mb-6 pb-4 scrollbar-hide">
+        {popularMovies.map((movie) => (
+          <MovieCard key={movie.id} movie={movie} />
+        ))}
+      </div>
+      <Link to="/genre/All" className="text-blue-400 hover:underline">
+        See More
+      </Link>
+      <h2 className="text-3xl font-bold mt-8 mb-4">Genres</h2>
+      <div className="flex overflow-x-auto space-x-4 mb-6 pb-4 scrollbar-hide">
+        {genres.slice(0, 5).map((genre) => (
+          <Link
+            key={genre.id}
+            to={`/genre/${genre.name}`}
+            className="bg-gray-800 p-4 rounded-lg hover:bg-gray-700 transition"
+          >
+            {genre.name}
+          </Link>
+        ))}
+      </div>
+      {genreLoading ? (
+        <div className="text-center">Loading...</div>
+      ) : filteredMovies.length > 0 ? (
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+          {filteredMovies.map((movie) => (
+            <MovieCard key={movie.id} movie={movie} />
+          ))}
+        </div>
+      ) : (
+        <div className="text-center">No movies available</div>
+      )}
     </main>
   );
 };
