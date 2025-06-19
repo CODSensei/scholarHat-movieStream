@@ -1,6 +1,6 @@
 import React from "react";
-import { BrowserRouter } from "react-router-dom";
 import MovieStreaming from "./components/MovieStreaming";
+import { BrowserRouter } from "react-router-dom";
 
 const App: React.FC = () => {
   return (

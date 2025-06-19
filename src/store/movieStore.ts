@@ -1,12 +1,12 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
+import type { MovieTypes, Genre } from "../utils/interfaces";
 import {
   getMovies,
   getGenres,
   searchMovies,
   getMoviesByGenre,
 } from "../api/api";
-import type { Genre, MovieTypes } from "../utils/interfaces";
 
 interface MovieState {
   movies: MovieTypes[];
@@ -19,8 +19,6 @@ interface MovieState {
   selectedGenre: string;
   genreMovies: MovieTypes[];
   genreLoading: boolean;
-  page: number;
-  totalPages: number;
 
   setMovies: (movies: MovieTypes[]) => void;
   setGenres: (genres: Genre[]) => void;
@@ -31,17 +29,12 @@ interface MovieState {
   setSelectedGenre: (genre: string) => void;
   setGenreMovies: (movies: MovieTypes[]) => void;
   setGenreLoading: (loading: boolean) => void;
-  setPage: (page: number) => void;
-  setTotalPages: (pages: number) => void;
-
   addToFavorites: (id: number) => void;
   removeFromFavorites: (id: number) => void;
   toggleFavorite: (id: number) => void;
-
   fetchInitialData: () => Promise<void>;
   searchMoviesAsync: (query: string) => Promise<void>;
   fetchMoviesByGenre: (genreId: number) => Promise<void>;
-
   getMoviesWithGenres: () => MovieTypes[];
   getSearchResultsWithGenres: () => MovieTypes[];
   getFavoriteMovies: () => MovieTypes[];
@@ -62,8 +55,6 @@ export const useMovieStore = create<MovieState>()(
       selectedGenre: "All",
       genreMovies: [],
       genreLoading: false,
-      page: 1,
-      totalPages: 1,
 
       setMovies: (movies) => set({ movies }),
       setGenres: (genres) => set({ genres }),
@@ -74,8 +65,6 @@ export const useMovieStore = create<MovieState>()(
       setSelectedGenre: (genre) => set({ selectedGenre: genre }),
       setGenreMovies: (movies) => set({ genreMovies: movies }),
       setGenreLoading: (loading) => set({ genreLoading: loading }),
-      setPage: (page) => set({ page }),
-      setTotalPages: (totalPages) => set({ totalPages }),
 
       addToFavorites: (id) =>
         set((state) => ({
@@ -110,17 +99,14 @@ export const useMovieStore = create<MovieState>()(
                 title: movie.title,
                 poster: movie.poster_path
                   ? `https://image.tmdb.org/t/p/w500${movie.poster_path}`
-                  : "https://via.placeholder.com/500x750",
+                  : "https://via.placeholder.com/500x750?text=No+Image",
                 overview: movie.overview,
                 releaseDate: movie.release_date,
                 genre: movie.genre_ids?.[0] || "Unknown",
                 genre_ids: movie.genre_ids || [],
               })
             );
-            set({
-              movies: formattedMovies,
-              totalPages: moviesResponse.data.total_pages || 1,
-            });
+            set({ movies: formattedMovies });
           }
           if (genresResponse.data?.genres)
             set({ genres: genresResponse.data.genres });
@@ -145,17 +131,14 @@ export const useMovieStore = create<MovieState>()(
                 title: movie.title,
                 poster: movie.poster_path
                   ? `https://image.tmdb.org/t/p/w500${movie.poster_path}`
-                  : "https://via.placeholder.com/500x750",
+                  : "https://via.placeholder.com/500x750?text=No+Image",
                 overview: movie.overview,
                 releaseDate: movie.release_date,
                 genre: movie.genre_ids?.[0] || "Unknown",
                 genre_ids: movie.genre_ids || [],
               })
             );
-            set({
-              searchResults: formattedResults,
-              totalPages: response.data.total_pages || 1,
-            });
+            set({ searchResults: formattedResults });
           }
         } catch (error) {
           console.error("Error searching movies:", error);
@@ -173,16 +156,13 @@ export const useMovieStore = create<MovieState>()(
               title: movie.title,
               poster: movie.poster_path
                 ? `https://image.tmdb.org/t/p/w500${movie.poster_path}`
-                : "https://via.placeholder.com/500x750",
+                : "https://via.placeholder.com/500x750?text=No+Image",
               overview: movie.overview,
               releaseDate: movie.release_date,
               genre: get().getGenreName(movie.genre_ids || []),
               genre_ids: movie.genre_ids || [],
             }));
-            set({
-              genreMovies: formattedMovies,
-              totalPages: response.data.total_pages || 1,
-            });
+            set({ genreMovies: formattedMovies });
           }
         } catch (error) {
           console.error("Error fetching genre movies:", error);
@@ -223,14 +203,10 @@ export const useMovieStore = create<MovieState>()(
       },
 
       getFilteredMovies: (movies: MovieTypes[]) => {
-        const { searchQuery, page } = get();
-        const start = (page - 1) * 20;
-        const end = start + 20;
-        return movies
-          .filter((movie) =>
-            movie.title.toLowerCase().includes(searchQuery.toLowerCase())
-          )
-          .slice(start, end);
+        const { searchQuery } = get();
+        return movies.filter((movie) =>
+          movie.title.toLowerCase().includes(searchQuery.toLowerCase())
+        );
       },
     }),
     {
