@@ -16,9 +16,12 @@ const MovieStreaming: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-gray-900 to-black flex items-center justify-center">
-        <div className="text-white text-xl animate-pulse">
-          Loading movies...
+      <div className="min-h-screen bg-gradient-to-b from-gray-900 to-black flex items-center justify-center text-white">
+        <div className="flex justify-center items-center min-h-[400px]">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div>
+            <p className="text-lg">Loading movies...</p>
+          </div>
         </div>
       </div>
     );

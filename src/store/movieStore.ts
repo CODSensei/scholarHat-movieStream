@@ -1,15 +1,18 @@
+// src/store/movieStore.ts
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
-import type { MovieTypes, Genre } from "../utils/interfaces";
+import type { MovieTypes, Genre, TMDBMovieResponse } from "../utils/interfaces";
 import {
   getMovies,
   getGenres,
   searchMovies,
+  getMovieDetails,
   getMoviesByGenre,
 } from "../api/api";
 
 interface MovieState {
   movies: MovieTypes[];
+  movieDetails: TMDBMovieResponse | null;
   genres: Genre[];
   searchResults: MovieTypes[];
   selectedMovie: MovieTypes | null;
@@ -19,8 +22,10 @@ interface MovieState {
   selectedGenre: string;
   genreMovies: MovieTypes[];
   genreLoading: boolean;
+  detailsLoading: boolean;
 
   setMovies: (movies: MovieTypes[]) => void;
+  setMovieDetails: (movieDetails: TMDBMovieResponse | null) => void;
   setGenres: (genres: Genre[]) => void;
   setSearchResults: (results: MovieTypes[]) => void;
   setSelectedMovie: (movie: MovieTypes | null) => void;
@@ -29,12 +34,14 @@ interface MovieState {
   setSelectedGenre: (genre: string) => void;
   setGenreMovies: (movies: MovieTypes[]) => void;
   setGenreLoading: (loading: boolean) => void;
+  setDetailsLoading: (loading: boolean) => void;
   addToFavorites: (id: number) => void;
   removeFromFavorites: (id: number) => void;
   toggleFavorite: (id: number) => void;
   fetchInitialData: () => Promise<void>;
   searchMoviesAsync: (query: string) => Promise<void>;
   fetchMoviesByGenre: (genreId: number) => Promise<void>;
+  fetchMovieDetails: (movieId: number) => Promise<void>;
   getMoviesWithGenres: () => MovieTypes[];
   getSearchResultsWithGenres: () => MovieTypes[];
   getFavoriteMovies: () => MovieTypes[];
@@ -46,6 +53,7 @@ export const useMovieStore = create<MovieState>()(
   persist(
     (set, get) => ({
       movies: [],
+      movieDetails: null,
       genres: [],
       searchResults: [],
       selectedMovie: null,
@@ -55,8 +63,10 @@ export const useMovieStore = create<MovieState>()(
       selectedGenre: "All",
       genreMovies: [],
       genreLoading: false,
+      detailsLoading: false,
 
       setMovies: (movies) => set({ movies }),
+      setMovieDetails: (movieDetails) => set({ movieDetails }),
       setGenres: (genres) => set({ genres }),
       setSearchResults: (results) => set({ searchResults: results }),
       setSelectedMovie: (movie) => set({ selectedMovie: movie }),
@@ -65,6 +75,7 @@ export const useMovieStore = create<MovieState>()(
       setSelectedGenre: (genre) => set({ selectedGenre: genre }),
       setGenreMovies: (movies) => set({ genreMovies: movies }),
       setGenreLoading: (loading) => set({ genreLoading: loading }),
+      setDetailsLoading: (loading) => set({ detailsLoading: loading }),
 
       addToFavorites: (id) =>
         set((state) => ({
@@ -92,16 +103,17 @@ export const useMovieStore = create<MovieState>()(
             getMovies(),
             getGenres(),
           ]);
+          console.table("Initial data :- ", moviesResponse.data?.results);
           if (moviesResponse.data?.results) {
             const formattedMovies = moviesResponse.data.results.map(
               (movie: any) => ({
                 id: movie.id,
                 title: movie.title,
-                poster: movie.poster_path
-                  ? `https://image.tmdb.org/t/p/w500${movie.poster_path}`
+                poster: movie.poster
+                  ? `${movie.poster}`
                   : "https://via.placeholder.com/500x750?text=No+Image",
                 overview: movie.overview,
-                releaseDate: movie.release_date,
+                releaseDate: movie.releaseDate,
                 genre: movie.genre_ids?.[0] || "Unknown",
                 genre_ids: movie.genre_ids || [],
               })
@@ -117,6 +129,22 @@ export const useMovieStore = create<MovieState>()(
         }
       },
 
+      fetchMovieDetails: async (movieId: number) => {
+        try {
+          set({ detailsLoading: true });
+          const movieDetails = await getMovieDetails(movieId);
+          if (movieDetails?.data) {
+            console.log("Movie Details :- ", movieDetails.data);
+            set({ movieDetails: movieDetails.data });
+          }
+        } catch (error) {
+          console.error("Error fetching movie details:", error);
+          set({ movieDetails: null });
+        } finally {
+          set({ detailsLoading: false });
+        }
+      },
+
       searchMoviesAsync: async (query: string) => {
         if (!query.trim()) {
           set({ searchResults: [] });
@@ -129,11 +157,11 @@ export const useMovieStore = create<MovieState>()(
               (movie: any) => ({
                 id: movie.id,
                 title: movie.title,
-                poster: movie.poster_path
-                  ? `https://image.tmdb.org/t/p/w500${movie.poster_path}`
+                poster: movie.poster
+                  ? `${movie.poster}`
                   : "https://via.placeholder.com/500x750?text=No+Image",
                 overview: movie.overview,
-                releaseDate: movie.release_date,
+                releaseDate: movie.releaseDate,
                 genre: movie.genre_ids?.[0] || "Unknown",
                 genre_ids: movie.genre_ids || [],
               })
@@ -154,11 +182,11 @@ export const useMovieStore = create<MovieState>()(
             const formattedMovies = response.data.results.map((movie: any) => ({
               id: movie.id,
               title: movie.title,
-              poster: movie.poster_path
-                ? `https://image.tmdb.org/t/p/w500${movie.poster_path}`
+              poster: movie.poster
+                ? `${movie.poster}`
                 : "https://via.placeholder.com/500x750?text=No+Image",
               overview: movie.overview,
-              releaseDate: movie.release_date,
+              releaseDate: movie.releaseDate,
               genre: get().getGenreName(movie.genre_ids || []),
               genre_ids: movie.genre_ids || [],
             }));

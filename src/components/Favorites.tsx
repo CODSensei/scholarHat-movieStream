@@ -3,15 +3,14 @@ import { useMovieStore } from "../store/movieStore";
 import MovieCard from "./MovieCard";
 
 const Favorites: React.FC = () => {
-  const { favorites, getFavoriteMovies, getFilteredMovies, toggleFavorite } =
-    useMovieStore();
+  const { favorites, getFavoriteMovies, getFilteredMovies } = useMovieStore();
   const favoriteMovies = getFavoriteMovies();
   const filteredMovies = getFilteredMovies(favoriteMovies);
 
   return (
-    <main className="bg-gray-900 text-white p-6">
+    <main className="text-white p-6">
       <div className="max-w-7xl mx-auto">
-        <h2 className="text-3xl font-bold mb-6">
+        <h2 className="text-3xl font-bold mb-6 flex flex-row items-center">
           Favorite Movies
           {favorites.length > 0 && (
             <span className="text-gray-400 text-lg ml-2">
@@ -19,16 +18,10 @@ const Favorites: React.FC = () => {
             </span>
           )}
         </h2>
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
           {filteredMovies.length > 0 ? (
             filteredMovies.map((movie) => (
-              <MovieCard
-                key={movie.id}
-                movie={movie}
-                onClick={(id) => useMovieStore.getState().fetchMovieDetails(id)}
-                onToggleFavorite={toggleFavorite}
-                isFavorite={true}
-              />
+              <MovieCard key={movie.id} movie={movie} />
             ))
           ) : (
             <div className="col-span-full text-center py-8">

@@ -11,6 +11,4 @@ export const formatMovie = (movie: any): MovieTypes => ({
   releaseDate: movie?.release_date,
   genre: movie?.genre_ids?.[0] || "Unknown",
   genre_ids: movie?.genre_ids || [],
-  vote_average: movie?.vote_average,
-  vote_count: movie?.vote_count,
 });

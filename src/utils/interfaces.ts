@@ -1,3 +1,4 @@
+// src/utils/interfaces.ts
 export interface MovieTypes {
   id: number;
   title: string;
@@ -6,6 +7,7 @@ export interface MovieTypes {
   releaseDate: string;
   genre: string;
   genre_ids?: number[];
+  videos?: { key: string; site: string; type: string }[];
 }
 
 export interface Genre {
@@ -14,12 +16,14 @@ export interface Genre {
 }
 
 export interface TMDBMovieResponse {
-  id: number;
-  title: string;
-  poster_path: string | null;
-  overview: string;
-  release_date: string;
-  genre_ids: number[];
-  vote_average: number;
-  vote_count: number;
+  id?: number;
+  title?: string;
+  poster_path?: string | null;
+  overview?: string;
+  release_date?: string;
+  genre_ids?: number[];
+  vote_average?: number;
+  vote_count?: number;
+  genre?: string;
+  videos?: { key: string; site: string; type: string }[];
 }

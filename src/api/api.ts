@@ -74,7 +74,7 @@ export const getMoviesByGenre = async (genreId: number, page: number = 1) => {
 };
 
 // Get movie details
-export const getMovieDetails = async (movieId: number) => {
+export const getMovieDetails = async (movieId: number | unknown) => {
   try {
     const response = await axios.get(
       `/movie/${movieId}?append_to_response=videos`
