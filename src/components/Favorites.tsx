@@ -1,3 +1,4 @@
+// src/components/Favorites.tsx
 import React from "react";
 import { useMovieStore } from "../store/movieStore";
 import MovieCard from "./MovieCard";

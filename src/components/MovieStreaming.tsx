@@ -1,3 +1,4 @@
+// src/components/MovieStreaming.tsx
 import React, { useEffect } from "react";
 import { Route, Routes } from "react-router-dom";
 import { useMovieStore } from "../store/movieStore";

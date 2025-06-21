@@ -1,3 +1,4 @@
+// src/components/MovieModal.tsx
 import React from "react";
 import { useMovieStore } from "../store/movieStore";
 
